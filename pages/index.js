@@ -66,9 +66,12 @@ export default function Home() {
   useEffect(() => {
     localStorage.setItem('contnotes', JSON.stringify(contnotes));
   }, [contnotes]);
+
   const handleDeleteTask = (indexToDelete) => {
-    const newtasks = titlenotes.filter((_, index) => index !== indexToDelete);
-    settitlenotes(newtasks);
+    const newtitle = titlenotes.filter((_, index) => index !== indexToDelete);
+    settitlenotes(newtitle);
+    const newconts = contnotes.filter((_, index) => index !== indexToDelete);
+    setcontnotes(newconts);
   };
 
   return (
