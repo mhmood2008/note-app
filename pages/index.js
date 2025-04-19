@@ -1,115 +1,138 @@
-import Image from "next/image";
-import { Geist, Geist_Mono } from "next/font/google";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+import { useState, useEffect, useRef } from "react";
 
 export default function Home() {
+  const [show, setshow] = useState(false);
+  const [noteTitle, setnoteTitle] = useState("");
+  const [notecont, setnotecont] = useState("");
+  const [titlenotes, settitlenotes] = useState([]);
+  const [contnotes, setcontnotes] = useState([]);
+  const [visibleIndexes, setVisibleIndexes] = useState([]);
+  const notesRef = useRef([]);
+
+  const seva = () => {
+    if (noteTitle.trim() === "" || notecont.trim() === "") {
+      setshow(false);
+      return;
+    }
+    settitlenotes([...titlenotes, noteTitle]);
+    setcontnotes([...contnotes, notecont]);
+    setshow(false);
+    setnoteTitle("");
+    setnotecont("");
+  };
+
+  const toggleVisibility = (index) => {
+    if (visibleIndexes.includes(index)) {
+      setVisibleIndexes(visibleIndexes.filter((i) => i !== index));
+    } else {
+      setVisibleIndexes([...visibleIndexes, index]);
+    }
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      // تحقق إذا كان الضغط تم خارج كل عناصر الملاحظات
+      const clickedOutsideAll = notesRef.current.every(
+        (note) => note && !note.contains(e.target)
+      );
+  
+      if (clickedOutsideAll) {
+        setVisibleIndexes([]);
+      }
+    };
+  
+    document.addEventListener("click", handleClickOutside);
+  
+    return () => {
+      document.removeEventListener("click", handleClickOutside);
+    };
+  }, []);
+  useEffect(() => {
+    const savedtitle = JSON.parse(localStorage.getItem('titlenotes'));
+    if (savedtitle) {
+      settitlenotes(savedtitle);
+    }
+  }, []);
+  useEffect(() => {
+    localStorage.setItem('titlenotes', JSON.stringify(titlenotes));
+  }, [titlenotes]);
+
+  useEffect(() => {
+    const savedcont = JSON.parse(localStorage.getItem('contnotes'));
+    if (savedcont) {
+      setcontnotes(savedcont);
+    }
+  }, []);
+  useEffect(() => {
+    localStorage.setItem('contnotes', JSON.stringify(contnotes));
+  }, [contnotes]);
+  const handleDeleteTask = (indexToDelete) => {
+    const newtasks = titlenotes.filter((_, index) => index !== indexToDelete);
+    settitlenotes(newtasks);
+  };
+
   return (
-    <div
-      className={`${geistSans.className} ${geistMono.className} grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]`}
-    >
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              pages/index.js
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+    <div>
+      <h1>What happened today?</h1>
+
+      <div className="add-btn-div">
+        <button onClick={() => setshow(true)} className="add-btn">
+          add a note
+        </button>
+      </div>
+
+      {show && (
+        <>
+          <div className="add-box-div">
+            <input
+              value={noteTitle}
+              onChange={(e) => setnoteTitle(e.target.value)}
+              type="text"
+              placeholder="ادخل عنوان الملاحظه"
+              className="note-name"
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+          </div>
+          <div className="add-box-div">
+            <textarea
+              value={notecont}
+              onChange={(e) => setnotecont(e.target.value)}
+              placeholder="ادخل نص الملاحظه"
+              className="note-contenar"
+            />
+          </div>
+          <div className="add-note-div">
+            <button onClick={seva} className="add-note-2">
+              add
+            </button>
+          </div>
+        </>
+      )}
+
+      <ul>
+        {titlenotes.map((t, index) => (
+          <li key={index} ref={(el) => (notesRef.current[index] = el)}>
+            <div className="note-wrapper">
+              <div className="note-div-t" onClick={() => toggleVisibility(index)}>
+                <h3 className="title-note">
+                  {t}
+                  <img
+                    className="imgr"
+                    src={ visibleIndexes.includes(index) ? "/icons/close.svg" : "/icons/show.svg"}
+                    width={24}
+                    height={24}
+                    alt="icon"
+                  />
+                  <button onClick={() => handleDeleteTask(index)} className="img"><img width={24}
+                    height={24} src="/icons/delete.svg"/></button>
+                </h3>
+              </div>
+              <div className={`note-div-c ${visibleIndexes.includes(index) ? "show" : ""}`}>
+                <p className="cont">{contnotes[index]}</p>
+              </div>
+            </div>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
